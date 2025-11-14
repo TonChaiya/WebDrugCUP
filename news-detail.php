@@ -26,4 +26,6 @@ include __DIR__ . '/includes/header.php';
     <div class="prose max-w-none text-gray-800"><?php echo nl2br(e($news['content'])); ?></div>
 </article>
 
+<?php include __DIR__ . '/includes/drive-list.php'; ?>
+
 <?php include __DIR__ . '/includes/footer.php'; ?>

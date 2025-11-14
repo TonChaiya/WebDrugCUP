@@ -18,6 +18,19 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', '/');
 }
 
+// Uploads directory (for storing cover images on server)
+if (!defined('UPLOADS_DIR')) {
+    define('UPLOADS_DIR', __DIR__ . '/../assets/uploads');
+}
+if (!defined('UPLOADS_URL')) {
+    define('UPLOADS_URL', BASE_URL . 'assets/uploads');
+}
+
+// Max upload size for cover images (bytes). Default 5 MB.
+if (!defined('MAX_COVER_UPLOAD_BYTES')) {
+    define('MAX_COVER_UPLOAD_BYTES', 5 * 1024 * 1024);
+}
+
 // DB_TYPE: 'sqlite' or 'mysql'
 // Default to MySQL for this installation (change to 'sqlite' if you prefer the bundled SQLite)
 if (!defined('DB_TYPE')) {

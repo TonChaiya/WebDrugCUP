@@ -164,8 +164,7 @@ $docs = $pdo->query('SELECT * FROM documents ORDER BY uploaded_at DESC')->fetchA
         const bulkContainer = document.createElement('div');
         bulkContainer.className = 'mb-3 flex gap-2';
         const importAllBtn = document.createElement('button'); importAllBtn.className = 'bg-green-600 text-white px-2 py-1 text-xs rounded'; importAllBtn.innerText = 'นำเข้าทั้งหมด (Import all)';
-        const removeAllBtn = document.createElement('button'); removeAllBtn.className = 'bg-red-600 text-white px-2 py-1 text-xs rounded'; removeAllBtn.innerText = 'ลบทั้งหมดจาก DB (Remove all)';
-        bulkContainer.appendChild(importAllBtn); bulkContainer.appendChild(removeAllBtn);
+        bulkContainer.appendChild(importAllBtn);
         // Insert bulk container at top of modal content
         const content = document.getElementById('driveSyncContent');
         if (content.firstChild !== bulkContainer) content.insertBefore(bulkContainer, content.firstChild);
@@ -174,12 +173,12 @@ $docs = $pdo->query('SELECT * FROM documents ORDER BY uploaded_at DESC')->fetchA
 
         async function callAction(payload){
           try{
-            const res = await fetch('drive_sync_action.php', { method: 'POST', credentials: 'same-origin', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+            const res = await fetch('drive_sync_action_fixed.php', { method: 'POST', credentials: 'same-origin', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
             return await res.json();
           } catch(e){ return { error: e.message }; }
         }
 
-        // per-file import buttons
+        // per-file import / delete / skip buttons
         (j.onDriveNotInDB||[]).forEach(f=>{
           const li = document.createElement('li');
           li.className = 'flex justify-between items-center';
@@ -187,12 +186,16 @@ $docs = $pdo->query('SELECT * FROM documents ORDER BY uploaded_at DESC')->fetchA
           const a = document.createElement('a'); a.href = f.webViewLink || '#'; a.target = '_blank'; a.innerText = f.name || f.id;
           left.appendChild(a);
           const right = document.createElement('div');
+
           const impBtn = document.createElement('button'); impBtn.className = 'ml-2 bg-green-500 text-white px-2 py-1 text-xs rounded'; impBtn.innerText = 'Import';
+          const delBtn = document.createElement('button'); delBtn.className = 'ml-2 bg-red-500 text-white px-2 py-1 text-xs rounded'; delBtn.innerText = 'Delete (Drive)';
+          const skipBtn = document.createElement('button'); skipBtn.className = 'ml-2 bg-gray-500 text-white px-2 py-1 text-xs rounded'; skipBtn.innerText = 'Skip';
           const status = document.createElement('span'); status.className = 'ml-2 text-xs text-gray-600';
+
           impBtn.addEventListener('click', async ()=>{
             setBtnState(impBtn, true); status.innerText = '...';
             const r = await callAction({ action: 'import', drive_id: f.id, name: f.name, webViewLink: f.webViewLink });
-            if (r && r.ok && r.results && r.results[f.id] && r.results[f.id].ok){ status.innerText = 'นำเข้าแล้ว (Imported)'; impBtn.remove(); }
+            if (r && r.ok && r.results && r.results[f.id] && r.results[f.id].ok){ status.innerText = 'นำเข้าแล้ว (Imported)'; impBtn.remove(); delBtn.remove(); skipBtn.remove(); }
             else {
               let msg = 'ผิดพลาด';
               if (r && r.error) msg += ': ' + r.error;
@@ -203,7 +206,22 @@ $docs = $pdo->query('SELECT * FROM documents ORDER BY uploaded_at DESC')->fetchA
               setBtnState(impBtn, false);
             }
           });
-          right.appendChild(impBtn); right.appendChild(status);
+
+          delBtn.addEventListener('click', async ()=>{
+            setBtnState(delBtn, true); status.innerText = '...';
+            const r = await callAction({ action: 'delete_drive', drive_id: f.id });
+            if (r && r.ok){ status.innerText = 'ลบจาก Drive แล้ว (Deleted)'; impBtn.remove(); delBtn.remove(); skipBtn.remove(); }
+            else { status.innerText = 'ผิดพลาด: ' + (r && (r.error || r.message) ? (r.error || r.message) : JSON.stringify(r)); setBtnState(delBtn, false); }
+          });
+
+          skipBtn.addEventListener('click', async ()=>{
+            setBtnState(skipBtn, true); status.innerText = '...';
+            const r = await callAction({ action: 'skip', drive_id: f.id, reason: 'manual_skip' });
+            if (r && r.ok){ status.innerText = 'ข้ามแล้ว (Skipped)'; impBtn.remove(); delBtn.remove(); skipBtn.remove(); }
+            else { status.innerText = 'ผิดพลาด: ' + (r && (r.error || r.message) ? (r.error || r.message) : JSON.stringify(r)); setBtnState(skipBtn, false); }
+          });
+
+          right.appendChild(impBtn); right.appendChild(delBtn); right.appendChild(skipBtn); right.appendChild(status);
           li.appendChild(left); li.appendChild(right);
           onDriveList.appendChild(li);
         });
@@ -244,14 +262,7 @@ $docs = $pdo->query('SELECT * FROM documents ORDER BY uploaded_at DESC')->fetchA
           else { importAllBtn.innerText = 'ผิดพลาด: ' + (res && (res.error || res.message) ? (res.error || res.message) : JSON.stringify(res)); importAllBtn.disabled = false; }
         });
 
-        removeAllBtn.addEventListener('click', async ()=>{
-          removeAllBtn.disabled = true; removeAllBtn.innerText = 'กำลังลบ...';
-          const ids = (j.inDBNotOnDrive||[]).map(r=>r.doc_id);
-          if (ids.length === 0){ removeAllBtn.innerText = 'ไม่มีรายการลบ'; return; }
-          const res = await callAction({ action: 'remove_all', doc_ids: ids });
-          if (res && res.ok){ removeAllBtn.innerText = 'ลบเสร็จแล้ว'; setTimeout(()=>removeAllBtn.remove(), 1200); }
-          else { removeAllBtn.innerText = 'ผิดพลาด: ' + (res && (res.error || res.message) ? (res.error || res.message) : JSON.stringify(res)); removeAllBtn.disabled = false; }
-        });
+        // Removed bulk 'Remove all' button per request
 
         document.getElementById('driveSyncModal').classList.remove('hidden');
       }

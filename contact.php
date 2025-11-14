@@ -9,9 +9,9 @@ include __DIR__ . '/includes/header.php';
 <div class="bg-white rounded shadow p-6">
     <p>กรุณาติดต่อที่:</p>
     <ul class="list-disc ml-6 mt-2 text-sm text-gray-700">
-        <li>โทร: 02-000-0000</li>
-        <li>อีเมล: info@example.org</li>
-        <li>ที่อยู่: 123 หมู่บ้าน ตัวอย่าง เขต อำเภอ จังหวัด 10200</li>
+        <li>โทร: XX-XXX-XXXX</li>
+        <li>อีเมล: 05957.ksl@gmail.com</li>
+        <li>ผู้พัฒนา: ไชยา บุญทานุช เจ้าพนักงานเภสัชกรรม</li>
     </ul>
 </div>
 

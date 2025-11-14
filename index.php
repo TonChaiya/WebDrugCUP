@@ -28,11 +28,28 @@ include __DIR__ . '/includes/header.php';
         <h2 class="text-lg font-semibold mb-4">ข่าวล่าสุด</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <?php foreach ($latestNews as $n): ?>
-                <article class="bg-white rounded shadow p-4">
-                    <h3 class="font-semibold text-blue-600"><?php echo e($n['title']); ?></h3>
-                    <div class="text-xs text-gray-500"><?php echo e(format_datetime($n['date_posted'])); ?> — <?php echo e($n['category']); ?></div>
-                    <p class="mt-2 text-sm text-gray-700"><?php echo e(mb_substr($n['content'], 0, 120)); ?>...</p>
-                    <a href="news-detail.php?id=<?php echo $n['id']; ?>" class="inline-block mt-3 text-sm text-blue-600">อ่านต่อ</a>
+                <article class="bg-white rounded shadow overflow-hidden hover:shadow-lg transition">
+                    <?php if (!empty($n['image'])): ?>
+                        <?php
+                          $objPos = '';
+                          if (!empty($n['image_focus_x']) || !empty($n['image_focus_y'])) {
+                            $x = $n['image_focus_x'] ?? 50;
+                            $y = $n['image_focus_y'] ?? 50;
+                            $objPos = $x . '% ' . $y . '%';
+                          } elseif (!empty($n['image_position'])) {
+                            $objPos = $n['image_position'];
+                          }
+                        ?>
+                        <div class="h-40 w-full bg-gray-100 overflow-hidden">
+                            <img src="<?php echo e($n['image']); ?>" alt="<?php echo e($n['title']); ?>" class="w-full h-full object-cover" style="<?php echo $objPos ? 'object-position: ' . htmlspecialchars($objPos) . ';' : ''; ?>">
+                        </div>
+                    <?php endif; ?>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-blue-600"><?php echo e($n['title']); ?></h3>
+                        <div class="text-xs text-gray-500"><?php echo e(format_datetime($n['date_posted'])); ?> — <?php echo e($n['category']); ?></div>
+                        <p class="mt-2 text-sm text-gray-700"><?php echo e(mb_substr($n['content'], 0, 120)); ?>...</p>
+                        <a href="news-detail.php?id=<?php echo $n['id']; ?>" class="inline-block mt-3 text-sm text-blue-600">อ่านต่อ</a>
+                    </div>
                 </article>
             <?php endforeach; ?>
         </div>
